@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using HarmonyLib;
 using VRage.Plugins;
 
@@ -16,7 +17,7 @@ namespace Camera.Zoom
 
 		public void Init(object gameInstance)
 		{
-			new Harmony("Camera.Zoom").PatchAll();
+			new Harmony("Camera.Zoom").PatchAll(Assembly.GetExecutingAssembly());
 		}
 
 		public void Update()
