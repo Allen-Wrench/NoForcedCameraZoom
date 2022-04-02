@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Sandbox.Engine.Utils;
+using VRageMath;
 
 namespace Camera.Zoom
 {
@@ -15,24 +16,39 @@ namespace Camera.Zoom
 		{
 			characterSpring = AccessTools.Field(typeof(MyThirdPersonSpectator), "NormalSpringCharacter");
 			normalSpring = AccessTools.Field(typeof(MyThirdPersonSpectator), "NormalSpring");
+			lookAt = AccessTools.Field(typeof(MyThirdPersonSpectator), "m_lookAt");
+			clampedlookAt = AccessTools.Field(typeof(MyThirdPersonSpectator), "m_clampedlookAt");
+		}
+
+		public static BoundingBox Fix(BoundingBox bb)
+		{
+			bb.Scale(new Vector3(0.0001f));
+			return bb;
+		}
+
+		public static BoundingBoxD Fix2(BoundingBoxD worldAABB)
+		{
+			return new BoundingBoxD(worldAABB.Center - new Vector3D(0.0001), worldAABB.Center + new Vector3D(0.0001));
 		}
 
 		[HarmonyTranspiler]
 		[HarmonyPatch(typeof(MyThirdPersonSpectator), "ComputeEntitySafeOBB")]
 		public static IEnumerable<CodeInstruction> ComputeEntitySafeOBBTranspiler(IEnumerable<CodeInstruction> instructions)
 		{
-			List<CodeInstruction> list = instructions.ToList();
-			for (int i = 0; i < list.Count; i++)
+			foreach (CodeInstruction code in instructions)
 			{
-				if (list[i].opcode == OpCodes.Brfalse)
+				if (code.opcode == OpCodes.Stloc_1)
 				{
-					list[i].opcode = OpCodes.Br;
-					break;
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CameraPatches), "Fix", null, null));
+					yield return code;
 				}
-			}
-			foreach (CodeInstruction codeInstruction in list)
-			{
-				yield return codeInstruction;
+				else if (code.LoadsField(AccessTools.Field(typeof(MyThirdPersonSpectator), "m_safeAABB")))
+				{
+					yield return code;
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CameraPatches), "Fix2", null, null));
+				}
+				else
+					yield return code;
 			}
 		}
 
@@ -68,6 +84,13 @@ namespace Camera.Zoom
 		public static bool IsEntityFiltered(ref bool __result)
 		{
 			__result = true;
+			return false;
+		}
+
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(MyThirdPersonSpectator), "MergeAABB")]
+		public static bool MergeAABB()
+		{
 			return false;
 		}
 
@@ -111,6 +134,10 @@ namespace Camera.Zoom
 				{
 					yield return new CodeInstruction(OpCodes.Ldfld, characterSpring);
 				}
+				else if (codeInstruction.LoadsField(clampedlookAt, false))
+				{
+					yield return new CodeInstruction(OpCodes.Ldfld, lookAt);
+				}
 				else
 				{
 					yield return codeInstruction;
@@ -118,6 +145,8 @@ namespace Camera.Zoom
 			}
 		}
 
+		private static FieldInfo clampedlookAt;
+		private static FieldInfo lookAt;
 		private static FieldInfo characterSpring;
 		private static FieldInfo normalSpring;
 	}
