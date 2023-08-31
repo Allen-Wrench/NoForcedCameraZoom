@@ -52,24 +52,6 @@ namespace Camera.Zoom
 			}
 		}
 
-		[HarmonyTranspiler]
-		[HarmonyPatch(typeof(MyThirdPersonSpectator), "FindSafeStart")]
-		public static IEnumerable<CodeInstruction> FindSafeStartTranspiler(IEnumerable<CodeInstruction> instructions)
-		{
-			List<CodeInstruction> list = instructions.ToList();
-			for (int i = 0; i < list.Count; i++)
-			{
-				if (list[i].opcode == OpCodes.Brfalse)
-				{
-					list[i].opcode = OpCodes.Brtrue;
-					break;
-				}
-			}
-			foreach (CodeInstruction codeInstruction in list)
-			{
-				yield return codeInstruction;
-			}
-		}
 
 		[HarmonyPrefix]
 		[HarmonyPatch(typeof(MyThirdPersonSpectator), "IsCameraForced")]
