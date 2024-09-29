@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /CameraZoom/NoForcedCameraZoom.csproj
 /CameraZoom/Properties/AssemblyInfo.cs
+/NoForcedCameraZoom.sln
+/.gitignore
