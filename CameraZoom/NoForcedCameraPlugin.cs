@@ -9,8 +9,6 @@ namespace Camera.Zoom
 {
 	public class NoForcedCameraPlugin : IDisposable, IPlugin
 	{
-		public static Vector3I CameraOffset;
-
 		public NoForcedCameraPlugin()
 		{
 		}
