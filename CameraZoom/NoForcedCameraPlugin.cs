@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Reflection;
 using HarmonyLib;
+using Sandbox.Game.World;
 using VRage.Plugins;
+using VRageMath;
 
 namespace Camera.Zoom
 {
-	public class Plugin : IDisposable, IPlugin
+	public class NoForcedCameraPlugin : IDisposable, IPlugin
 	{
-		public Plugin()
+		public static Vector3I CameraOffset;
+
+		public NoForcedCameraPlugin()
 		{
 		}
 
