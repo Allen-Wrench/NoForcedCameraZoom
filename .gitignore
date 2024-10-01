@@ -365,3 +365,6 @@ FodyWeavers.xsd
 /CameraZoom/Properties/AssemblyInfo.cs
 /NoForcedCameraZoom.sln
 /.gitignore
+/CameraZoom/NFCConfig.cs
+/.gitignore
+/CameraZoom/NFCPluginGui.cs
