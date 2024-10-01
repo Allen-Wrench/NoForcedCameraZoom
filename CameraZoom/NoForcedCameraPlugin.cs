@@ -9,6 +9,7 @@ namespace Camera.Zoom
 {
 	public class NoForcedCameraPlugin : IDisposable, IPlugin
 	{
+
 		public NoForcedCameraPlugin()
 		{
 		}
@@ -20,10 +21,16 @@ namespace Camera.Zoom
 		public void Init(object gameInstance)
 		{
 			new Harmony("Camera.Zoom").PatchAll(Assembly.GetExecutingAssembly());
+
 		}
 
 		public void Update()
 		{
+		}
+
+		public void OpenConfigDialog()
+		{
+			return;
 		}
 	}
 }

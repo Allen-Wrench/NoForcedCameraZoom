@@ -205,7 +205,7 @@ namespace Camera.Zoom
 
 		public static Vector3D TargetOffset(Vector3D target, IMyControllableEntity entity)
 		{
-			if (entity != null && entity.Entity is MyTerminalBlock && (entity.Entity as MyTerminalBlock).CubeGrid != null)
+			if (entity != null && entity.Entity is MyTerminalBlock && (entity.Entity as MyTerminalBlock).CubeGrid != null && offsetStorage.ContainsKey(entity.Entity.EntityId))
 			{
 				MyCubeGrid grid = (entity.Entity as MyTerminalBlock).CubeGrid;
 				Vector3D vec = target - grid.PositionComp.GetPosition();
@@ -216,18 +216,9 @@ namespace Camera.Zoom
 
 		public static IMyControllableEntity ControllerChanged(IMyControllableEntity entity)
 		{
-			if (getControlledEntity(entity) is MyCharacter)
-			{
-				currentCameraOffset = Vector3D.Zero;
-				return entity;
-			}
+			currentCameraOffset = Vector3D.Zero;
 
-			if (!offsetStorage.ContainsKey(entity.Entity.EntityId))
-			{
-				currentCameraOffset = Vector3D.Zero;
-				offsetStorage[entity.Entity.EntityId] = currentCameraOffset;
-			}
-			else
+			if (offsetStorage.ContainsKey(entity.Entity.EntityId))
 			{
 				currentCameraOffset = offsetStorage[entity.Entity.EntityId];
 			}
@@ -258,9 +249,15 @@ namespace Camera.Zoom
 				MyOrientedBoundingBoxD obb = new MyOrientedBoundingBoxD(localAABB, matrixD);
 				MyRenderProxy.DebugDrawOBB(obb, Color.Lime, 0.01f, false, true, false);
 				MyRenderProxy.DebugDrawSphere(target, 0.5f, Color.Red, 2f, false, true);
+				if (MyInput.Static.IsNewKeyPressed(MyKeys.NumPad0) && offsetStorage.ContainsKey(controlledEntity.EntityId))
+				{
+					currentCameraOffset = Vector3D.Zero;
+					offsetStorage.Remove(controlledEntity.EntityId);
+					return;
+				}
 				foreach (KeyValuePair<MyStringId, Vector3D> item in adjustControls)
 				{
-					if (MyInput.Static.IsGameControlPressed(item.Key))
+					if (MyInput.Static.IsNewGameControlPressed(item.Key))
 					{
 						currentCameraOffset += item.Value;
 						currentCameraOffset = Vector3D.Clamp(currentCameraOffset, min, max);
