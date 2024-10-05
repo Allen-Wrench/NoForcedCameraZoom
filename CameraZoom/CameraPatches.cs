@@ -8,12 +8,8 @@ using Sandbox.Engine.Utils;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Entities.Cube;
-using Sandbox.Graphics.GUI;
-using VRage;
 using VRage.Game.Entity;
-using VRage.Game.Utils;
 using VRage.Input;
-using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
 using VRageRender;
@@ -32,9 +28,11 @@ namespace Camera.Zoom
 		private static Func<IMyControllableEntity, MyEntity> getControlledEntity;
 
 		public static Vector3D currentCameraOffset;
-		public static Dictionary<long, Vector3D> offsetStorage;
+		//public static Dictionary<long, Vector3D> offsetStorage;
+		public static Dictionary<string, Vector3D> offsetStorage;
 
 		private static Dictionary<MyStringId, Vector3D> adjustControls;
+		private static NFCConfig Config => NoForcedCameraPlugin.Config;
 
 		static CameraPatches()
 		{
@@ -45,7 +43,8 @@ namespace Camera.Zoom
 			target = AccessTools.Field(typeof(MyThirdPersonSpectator), "m_target");
 			lastControllerEntity = AccessTools.Field(typeof(MyThirdPersonSpectator), "m_lastControllerEntity");
 			getControlledEntity = AccessTools.MethodDelegate<Func<IMyControllableEntity, MyEntity>>(AccessTools.Method(typeof(MyThirdPersonSpectator), "GetControlledEntity"));
-			offsetStorage = new Dictionary<long, Vector3D>();
+			//offsetStorage = new Dictionary<long, Vector3D>();
+			offsetStorage = new Dictionary<string, Vector3D>();
 			adjustControls = new Dictionary<MyStringId, Vector3D>();
 			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_POSITIVE")] = new Vector3D(1, 0, 0);
 			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_NEGATIVE")] = new Vector3D(-1, 0, 0);
@@ -205,11 +204,10 @@ namespace Camera.Zoom
 
 		public static Vector3D TargetOffset(Vector3D target, IMyControllableEntity entity)
 		{
-			if (entity != null && entity.Entity is MyTerminalBlock && (entity.Entity as MyTerminalBlock).CubeGrid != null && offsetStorage.ContainsKey(entity.Entity.EntityId))
+			if (entity != null && entity.Entity is MyTerminalBlock block && block.CubeGrid != null && offsetStorage.ContainsKey(block.CubeGrid.DisplayName))
 			{
-				MyCubeGrid grid = (entity.Entity as MyTerminalBlock).CubeGrid;
-				Vector3D vec = target - grid.PositionComp.GetPosition();
-				return target + Vector3D.TransformNormal(currentCameraOffset, grid.WorldMatrix) - vec;
+				Vector3D vec = target - block.CubeGrid.PositionComp.GetPosition();
+				return target + Vector3D.TransformNormal(currentCameraOffset, block.CubeGrid.WorldMatrix) - vec;
 			}
 			return target;
 		}
@@ -218,9 +216,9 @@ namespace Camera.Zoom
 		{
 			currentCameraOffset = Vector3D.Zero;
 
-			if (offsetStorage.ContainsKey(entity.Entity.EntityId))
+			if (entity != null && entity.Entity is MyTerminalBlock block && block.CubeGrid != null && offsetStorage.ContainsKey(block.CubeGrid.DisplayName))
 			{
-				currentCameraOffset = offsetStorage[entity.Entity.EntityId];
+				currentCameraOffset = offsetStorage[block.CubeGrid.DisplayName];
 			}
 
 			return entity;
@@ -231,37 +229,36 @@ namespace Camera.Zoom
 			if (controlledEntity == null || controlledEntity is MyCharacter) 
 				return;
 
-			MyTerminalBlock block = controlledEntity as MyTerminalBlock;
-			if (block == null)
+			if (!(controlledEntity is MyTerminalBlock block) || !(block.CubeGrid is MyCubeGrid grid) || grid.PositionComp == null)
 				return;
-
-			MyCubeGrid grid = block.CubeGrid;
-			if (grid == null || grid.PositionComp == null)
-				return;
-
-			Vector3D min = grid.PositionComp.LocalAABB.Min;
-			Vector3D max = grid.PositionComp.LocalAABB.Max;
 
 			if (MyInput.Static.IsAnyCtrlKeyPressed() && MyInput.Static.IsAnyShiftKeyPressed())
 			{
-				BoundingBox localAABB = grid.PositionComp.LocalAABB;
-				MatrixD matrixD = grid.WorldMatrix;
-				MyOrientedBoundingBoxD obb = new MyOrientedBoundingBoxD(localAABB, matrixD);
-				MyRenderProxy.DebugDrawOBB(obb, Color.Lime, 0.01f, false, true, false);
-				MyRenderProxy.DebugDrawSphere(target, 0.5f, Color.Red, 2f, false, true);
-				if (MyInput.Static.IsNewKeyPressed(MyKeys.NumPad0) && offsetStorage.ContainsKey(controlledEntity.EntityId))
+				if (Config.ShowBBOverlay)
+				{
+					BoundingBox localAABB = grid.PositionComp.LocalAABB;
+					MatrixD matrixD = grid.WorldMatrix;
+					MyOrientedBoundingBoxD obb = new MyOrientedBoundingBoxD(localAABB, matrixD);
+					MyRenderProxy.DebugDrawOBB(obb, Color.Lime, 0.01f, false, true, false);
+					MyRenderProxy.DebugDrawPoint(target, Color.Red, false, false);
+				}
+				//if (MyInput.Static.IsNewKeyPressed(MyKeys.Back) && offsetStorage.ContainsKey(controlledEntity.EntityId))
+				if (MyInput.Static.IsNewKeyPressed(MyKeys.Back) && offsetStorage.ContainsKey(grid.DisplayName))
 				{
 					currentCameraOffset = Vector3D.Zero;
-					offsetStorage.Remove(controlledEntity.EntityId);
+					//offsetStorage.Remove(controlledEntity.EntityId);
+					offsetStorage.Remove(grid.DisplayName);
 					return;
 				}
+
 				foreach (KeyValuePair<MyStringId, Vector3D> item in adjustControls)
 				{
 					if (MyInput.Static.IsNewGameControlPressed(item.Key))
 					{
-						currentCameraOffset += item.Value;
-						currentCameraOffset = Vector3D.Clamp(currentCameraOffset, min, max);
-						offsetStorage[controlledEntity.EntityId] = currentCameraOffset;
+						currentCameraOffset += item.Value * Config.AdjustmentSpeed;
+						currentCameraOffset = Vector3D.Clamp(currentCameraOffset, grid.PositionComp.LocalAABB.Min, grid.PositionComp.LocalAABB.Max);
+						//offsetStorage[controlledEntity.EntityId] = currentCameraOffset;
+						offsetStorage[grid.DisplayName] = currentCameraOffset;
 						break;
 					}
 				}
