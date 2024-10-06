@@ -8,6 +8,7 @@ using Camera.Zoom.Gui;
 using HarmonyLib;
 using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game.GUI;
+using VRage.FileSystem;
 using VRage.Plugins;
 using VRage.Utils;
 
@@ -22,6 +23,7 @@ namespace Camera.Zoom
 			{
 				if (!File.Exists(configFilePath))
 				{
+					Directory.CreateDirectory(configFileDirectory);
 					XmlSerializer serializer = new XmlSerializer(typeof(NFCConfig));
 					serializer.Serialize(XmlWriter.Create(configFilePath), Config);
 					NewUpdate = true;
@@ -74,6 +76,7 @@ namespace Camera.Zoom
 		{
 			try
 			{
+				Directory.CreateDirectory(configFileDirectory);
 				XmlSerializer serializer = new XmlSerializer(typeof(NFCConfig));
 				serializer.Serialize(XmlWriter.Create(configFilePath), Config);
 			}
@@ -92,7 +95,8 @@ namespace Camera.Zoom
 		public static NFCConfig Config;
 		public static bool NewUpdate { get; private set; }
 
-		private static readonly string configFilePath = Assembly.GetExecutingAssembly().Location.Replace(".dll", ".xml");
+		private static readonly string configFileDirectory = Path.Combine(MyFileSystem.UserDataPath, "Plugins");
+		private static readonly string configFilePath = Path.Combine(configFileDirectory, "NoForcedCamera.config.xml");
 		private static readonly string latestPatchNotes =
 			"- New configuration UI accessible through the plugin menu." + "\n" +
 			"- Possible fix to allow offsets to persist through a Nexus server change." + "\n" +
