@@ -98,8 +98,6 @@ namespace Camera.Zoom
 		private static readonly string configFileDirectory = Path.Combine(MyFileSystem.UserDataPath, "Plugins");
 		private static readonly string configFilePath = Path.Combine(configFileDirectory, "NoForcedCamera.config.xml");
 		private static readonly string latestPatchNotes =
-			"- New configuration UI accessible through the plugin menu." + "\n" +
-			"- Possible fix to allow offsets to persist through a Nexus server change." + "\n" +
-			"- These fancy new update notifications.";
+			"- Fixed a key-binding issue that prevented one of the offset directions from working.";
 	}
 }

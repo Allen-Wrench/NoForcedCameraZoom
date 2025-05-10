@@ -31,7 +31,7 @@ namespace Camera.Zoom
 		//public static Dictionary<long, Vector3D> offsetStorage;
 		public static Dictionary<string, Vector3D> offsetStorage;
 
-		private static Dictionary<MyStringId, Vector3D> adjustControls;
+		private static Dictionary<MyKeys, Vector3D> adjustControls;
 		private static NFCConfig Config => NoForcedCameraPlugin.Config;
 
 		static CameraPatches()
@@ -45,13 +45,13 @@ namespace Camera.Zoom
 			getControlledEntity = AccessTools.MethodDelegate<Func<IMyControllableEntity, MyEntity>>(AccessTools.Method(typeof(MyThirdPersonSpectator), "GetControlledEntity"));
 			//offsetStorage = new Dictionary<long, Vector3D>();
 			offsetStorage = new Dictionary<string, Vector3D>();
-			adjustControls = new Dictionary<MyStringId, Vector3D>();
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_POSITIVE")] = new Vector3D(1, 0, 0);
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_NEGATIVE")] = new Vector3D(-1, 0, 0);
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_VERTICAL_POSITIVE")] = new Vector3D(0, 1, 0);
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_VERTICAL_NEGATIVE")] = new Vector3D(0, -1, 0);
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_ROLL_POSITIVE")] = new Vector3D(0, 0, 1);
-			adjustControls[MyStringId.GetOrCompute("CUBE_ROTATE_ROLL_NEGATIVE")] = new Vector3D(0, 0, -1);
+			adjustControls = new Dictionary<MyKeys, Vector3D>();
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_POSITIVE")).GetKeyboardControl()] = new Vector3D(1, 0, 0);
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_HORISONTAL_NEGATIVE")).GetKeyboardControl()] = new Vector3D(-1, 0, 0);
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_VERTICAL_POSITIVE")).GetKeyboardControl()] = new Vector3D(0, 1, 0);
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_VERTICAL_NEGATIVE")).GetKeyboardControl()] = new Vector3D(0, -1, 0);
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_ROLL_POSITIVE")).GetKeyboardControl()] = new Vector3D(0, 0, 1);
+			adjustControls[MyInput.Static.GetGameControl(MyStringId.GetOrCompute("CUBE_ROTATE_ROLL_NEGATIVE")).GetKeyboardControl()] = new Vector3D(0, 0, -1);
 		}
 
 		public static BoundingBox Fix(BoundingBox bb)
@@ -251,9 +251,9 @@ namespace Camera.Zoom
 					return;
 				}
 
-				foreach (KeyValuePair<MyStringId, Vector3D> item in adjustControls)
+				foreach (KeyValuePair<MyKeys, Vector3D> item in adjustControls)
 				{
-					if (MyInput.Static.IsNewGameControlPressed(item.Key))
+					if (MyInput.Static.IsKeyPress(item.Key))
 					{
 						currentCameraOffset += item.Value * Config.AdjustmentSpeed;
 						currentCameraOffset = Vector3D.Clamp(currentCameraOffset, grid.PositionComp.LocalAABB.Min, grid.PositionComp.LocalAABB.Max);
