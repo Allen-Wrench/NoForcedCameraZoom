@@ -103,13 +103,6 @@ namespace Camera.Zoom
 			return false;
 		}
 
-		[HarmonyPrefix]
-		[HarmonyPatch(typeof(MyThirdPersonSpectator), "MergeAABB")]
-		public static bool MergeAABB()
-		{
-			return false;
-		}
-
 		[HarmonyTranspiler]
 		[HarmonyPatch(typeof(MyThirdPersonSpectator), "RaycastOccludingObjects")]
 		public static IEnumerable<CodeInstruction> RaycastOccludingObjectsTranspiler(IEnumerable<CodeInstruction> instructions)
